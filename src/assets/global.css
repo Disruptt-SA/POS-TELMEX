@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.backgroundImage {
+	background-image: url("../assets/img/backgrounds/autelmex3.jpg");
+	background-size: cover;
+	height: 100vh;
+	min-height: 100vh;
+}
+
+.scroolCard {
+	overflow-y: scroll;
+	overflow: auto;
+}
+
+.shadowCard {
+	box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+}
+
+.hrDotted {
+	border-top: 6px dotted rgb(0, 0, 0);
+}
+
+.hrLine {
+	border: 1px solid rgb(0, 0, 0);
+}
+
+.shadow-inp {
+	box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.shadow-sl {
+	box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+	width: 190px;
+	height: 24px;
+	box-shadow: 0 5px 0 #26245C;
+	background: linear-gradient(#26245C 0 0) 50%/3px 100% no-repeat;
+	display: grid;
+}
+
+.loader:before,
+.loader:after {
+	content: "";
+	grid-area: 1/1;
+	background: radial-gradient(circle closest-side, var(--c, #00a0c6) 92%, #0000) 0 0/calc(100%/4) 100%;
+	clip-path: inset(0 50% 0 0);
+	animation: l3 1s infinite linear;
+}
+
+.loader:after {
+	--c: #26245C;
+	clip-path: inset(0 0 0 50%);
+}
+
+@keyframes l3 {
+	100% {
+		background-position: calc(100%/3) 0
+	}
+}

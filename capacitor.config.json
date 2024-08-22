@@ -1,0 +1,8 @@
+{
+  "appId": "com.dtt.posdtt",
+  "appName": "pos-dtt",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
