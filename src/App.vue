@@ -125,7 +125,7 @@ const handleOpenMenu = () => {
         <div class="flex flex-col min-h-screen justify-center items-center px-10 lg:px-10 md:px-24">
           <img class="object-fill w-[100%] lg:w-[35%] md:w-[85%] sm:w-[100%] block" :src="logoDtlogoTlxt">
           <p class="text:[15px] lg:text-xl md:text-2xl text-[#26245C] text-center font-extralight mb-10">
-            V.Alpha 1.0.0.231130
+            V.Alpha 1.0.0.2311301
           </p>
           <div class="loader mt-5"></div>
           <p class="mt-2 uppercase text-4xl text-[#26245C]">{{ syncText }}</p>
