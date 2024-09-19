@@ -171,8 +171,8 @@ const syncData = async() => {
 </script>
 
 <template>
-	<nav class="border-gray-200 bg-gray-50 top-0 z-40 flex-no-wrap fixed w-full p-2 h-28 md:h-auto md:pt-2 lg:h-auto lg:pt-2">
-		<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
+	<nav class="border-gray-200 bg-gray-50 top-0 z-40 flex-no-wrap fixed w-full p-4 h-36 md:h-auto md:pt-2 lg:h-auto lg:pt-2">
+		<div class="w-full flex flex-wrap items-center justify-between p-2">
 			<div class="flex items-center space-x-3 rtl:space-x-reverse">
 				<button class="text-[#01a0c7] flex hover:bg-black rounded-full p-2" @click="menuStore.handleMenu()">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"

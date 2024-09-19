@@ -113,8 +113,11 @@ const formMethodPayment = ref({
 	method: "",
 	amount: 0,
 	totalPaid: 0,
-	change: 0
+	change: 0,
+	pendingPay: 0
 })
+const pedingPayment = ref(0)
+
 const payments_sale = ref({
 	sale_id:null,
 	sat_payment_method_master_id: null,
@@ -212,6 +215,13 @@ const handleAddMethodPayment = async() => {
 	}
 	methodsPayments.value.push(formMethodPayment.value)
 
+	// Mostrar el pago pendiente
+	let pendingPayment = Math.max(0, sobrante).toFixed(2);
+	console.log(`Pago pendiente: $${pendingPayment}`);
+	pedingPayment.value = pendingPayment
+
+	// getPendingPayment(sobrante)
+
 	formMethodPayment.value = {
 		method: "",
 		amount: 0,
@@ -219,10 +229,16 @@ const handleAddMethodPayment = async() => {
 		change: 0
 	}
 	recalculateFormsPayments()
+	
 
 	modalMethodPayment.value = !modalMethodPayment.value
 	// console.log("paymentmethods", formMethodPayment.value)
 }
+
+// const getPendingPayment = (sobrante) => {
+	
+// 	formMethodPayment.value.pendingPay = Math.max(0, sobrante).toFixed(2);
+// };
 
 const handleCancelmethodPayment = (index) => {
 	const methodPayment = methodsPayments.value[index]
@@ -2124,62 +2140,83 @@ const handleSelectCategory = async(categoryId) => {
 
 <template>
 	<div class="flex bg-[#01a0c7] w-full p-4 pt-32 md:pt-24 lg:pt-32">
-		<div class="bg-[#ffffff] w-[100%] p-2 md:p-10 lg:p-10 rounded-3xl" v-show="!showTicket && !loader_sale && !loadPromotions">
-			<div class="lg:grid lg:grid-cols-6">
-				<div class="w-full px-2 bg-white rounded-lg lg:col-span-3">
-					<ul class="flex flex-row text-sm font-medium text-center text-white mb-2"
-						id="defaultTab" data-tabs-toggle="#defaultTabContent" role="tablist">
-						<li class="me-2 w-full bg-[#468aa2] rounded-lg hover:cursor-pointer hover:bg-[#4689a2d2]" @click="handleSelectCategory(1)">
+		<div class="bg-[#ffffff] w-[100%] p-2 md:p-10 lg:p-10 rounded-3xl"
+			v-show="!showTicket && !loader_sale && !loadPromotions">
+			<div class="flex flex-row">
+				<div class="w-full px-2 bg-white rounded-lg infoSale lg:w-[75%]">
+					<ul class="flex flex-row text-sm font-medium text-center text-white mb-2" id="defaultTab"
+						data-tabs-toggle="#defaultTabContent" role="tablist">
+						<li class="me-2 w-full bg-[#468aa2] rounded-lg hover:cursor-pointer hover:bg-[#4689a2d2]"
+							@click="handleSelectCategory(1)">
 							<p class="inline-block p-4 text-center text-2xl font-bold">Alimentos</p>
 						</li>
-						<li class="me-2 w-full bg-[#de5d6c] rounded-lg hover:cursor-pointer hover:bg-[#de5d6ccb]" @click="handleSelectCategory(2)">
+						<li class="me-2 w-full bg-[#de5d6c] rounded-lg hover:cursor-pointer hover:bg-[#de5d6ccb]"
+							@click="handleSelectCategory(2)">
 							<p class="inline-block p-4 text-center text-2xl font-bold">Bebidas</p>
 						</li>
-						<li class="me-2 w-full bg-[#e8775b] rounded-lg hover:cursor-pointer hover:bg-[#e8775bc2]" @click="handleSelectCategory(3)">
+						<li class="me-2 w-full bg-[#e8775b] rounded-lg hover:cursor-pointer hover:bg-[#e8775bc2]"
+							@click="handleSelectCategory(3)">
 							<p class="inline-block p-4 text-center text-2xl font-bold">Snack</p>
 						</li>
-						<li class="me-2 w-full bg-[#655ae0] rounded-lg hover:cursor-pointer hover:bg-[#655ae0d4]" @click="handleSelectCategory(4)">
+						<li class="me-2 w-full bg-[#655ae0] rounded-lg hover:cursor-pointer hover:bg-[#655ae0d4]"
+							@click="handleSelectCategory(4)">
 							<p class="inline-block p-4 text-center text-2xl font-bold">Bar</p>
 						</li>
 					</ul>
 					<div>
 						<div class="h-[850px]" v-if="loader_items">
-							<Loader msg="Cargando Articulos"/>
+							<Loader msg="Cargando Articulos" />
 						</div>
 						<div id="defaultTabContent" v-else>
-							<div class="p-2 md:p-8 rounded-b-lg rounded-e-lg" :class="[category_item == '1' ? 'bg-[#468aa2] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#de5d6c] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#e8775b] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#655ae0] hover:bg-[#655ae0d4]' : '']">
+							<div class="p-2 md:p-8 rounded-b-lg rounded-e-lg"
+								:class="[category_item == '1' ? 'bg-[#468aa2] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#de5d6c] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#e8775b] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#655ae0] hover:bg-[#655ae0d4]' : '']">
 								<div class="flex flex-row w-full">
 									<input
 										class="appearance-none block w-full text-2xl h-[80px] bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
 										id="grid-last-name" type="text"
 										placeholder="Ingrese el nombre o código del articulo"
-										v-on:keyup.enter="inputItemSearch()"
-										v-model="inpSearchItem">
-										<button v-if="!loaderSearch" @click="inputItemSearch()" class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white focus:ring-4 focus:outline-none" :class="[category_item == '1' ? 'bg-[#264a57] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#8b3a44cb] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#a65540c2] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#443c9a] hover:bg-[#655ae0cd]' : '']">
-											<svg class="w-8 h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-												<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-											</svg>
-											<span class="sr-only">Search</span>
-										</button>
-										<button v-if="!loaderSearch" @click="refreshItemSearch()"
-											class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white focus:ring-4 focus:outline-none" :class="[category_item == '1' ? 'bg-[#264a57] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#8b3a44cb] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#a65540c2] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#443c9a] hover:bg-[#655ae0cd]' : '']">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise w-8 h-8" viewBox="0 0 16 16">
-												<path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-												<path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-											</svg>
-											<span class="sr-only">Search</span>
-										</button>
-										<div role="status" v-if="loaderSearch" class="ml-3">
-											<svg aria-hidden="true" class="w-12 h-12 text-[#322f79 fab33c] animate-spin fill-[#fab33c]" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-												<path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-											</svg>
-											<span class="sr-only">Cargando...</span>
-										</div>
+										v-on:keyup.enter="inputItemSearch()" v-model="inpSearchItem">
+									<button v-if="!loaderSearch" @click="inputItemSearch()"
+										class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white focus:ring-4 focus:outline-none"
+										:class="[category_item == '1' ? 'bg-[#264a57] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#8b3a44cb] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#a65540c2] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#443c9a] hover:bg-[#655ae0cd]' : '']">
+										<svg class="w-8 h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+											fill="none" viewBox="0 0 20 20">
+											<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+												stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+										</svg>
+										<span class="sr-only">Search</span>
+									</button>
+									<button v-if="!loaderSearch" @click="refreshItemSearch()"
+										class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white focus:ring-4 focus:outline-none"
+										:class="[category_item == '1' ? 'bg-[#264a57] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#8b3a44cb] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#a65540c2] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#443c9a] hover:bg-[#655ae0cd]' : '']">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-arrow-clockwise w-8 h-8"
+											viewBox="0 0 16 16">
+											<path fill-rule="evenodd"
+												d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+											<path
+												d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+										</svg>
+										<span class="sr-only">Search</span>
+									</button>
+									<div role="status" v-if="loaderSearch" class="ml-3">
+										<svg aria-hidden="true"
+											class="w-12 h-12 text-[#322f79 fab33c] animate-spin fill-[#fab33c]"
+											viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+											<path
+												d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+												fill="currentColor" />
+											<path
+												d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+												fill="currentFill" />
+										</svg>
+										<span class="sr-only">Cargando...</span>
+									</div>
 								</div>
 							</div>
 							<!-- TABLA Busqueda de Artículos -->
-							<div class="flex flex-col overflow-x-auto h-1/2 bg-white" :class="{ 'hidden': !showItemSearch }">
+							<div class="flex flex-col overflow-x-auto h-1/2 bg-white"
+								:class="{ 'hidden': !showItemSearch }">
 								<div class="sm:-mx-6 lg:-mx-8">
 									<div class="inline-block min-w-full py-0 sm:px-6 lg:px-8">
 										<div class="overflow-x-auto">
@@ -2195,7 +2232,8 @@ const handleSelectCategory = async(categoryId) => {
 														<th scope="col" class="px-5 py-4">Und medida</th>
 														<!-- <th scope="col" class="px-5 py-4">Categoria</th> -->
 														<!-- <th scope="col" class="px-5 py-4">Ubicación</th> -->
-														<th scope="col" class="px-5 py-4 border-l-2 border-slate-300"></th>
+														<th scope="col" class="px-5 py-4 border-l-2 border-slate-300">
+														</th>
 													</tr>
 												</thead>
 												<tbody>
@@ -2203,9 +2241,12 @@ const handleSelectCategory = async(categoryId) => {
 														v-for="item in itemsStore.itemsList" :key="item">
 														<td class="whitespace-nowrap px-2 py-4">{{ item.itemid }}</td>
 														<td class="whitespace-nowrap px-2 py-4">{{ item.upccode }}</td>
-														<td class="whitespace-nowrap px-2 py-4">${{ item.PriceList[0]?.price_unitprice }}</td>
-														<td class="whitespace-nowrap px-2 py-4">{{ renderUnitList(item.unitlist) }}</td>
-														<td class="whitespace-nowrap px-2 py-4 border-l-2 border-slate-300">
+														<td class="whitespace-nowrap px-2 py-4">${{
+															item.PriceList[0]?.price_unitprice }}</td>
+														<td class="whitespace-nowrap px-2 py-4">{{
+															renderUnitList(item.unitlist) }}</td>
+														<td
+															class="whitespace-nowrap px-2 py-4 border-l-2 border-slate-300">
 															<button @click="handleAddItem(item)"
 																class="bg-[#26245C] text-[#ffffff] w-full h-[80px] mt-5 md:mt-0 lg:mt-0 font-semibold px-8 py-3 rounded-xl float-right ml-5 shadow-inp text-xl">Seleccionar</button>
 														</td>
@@ -2221,8 +2262,17 @@ const handleSelectCategory = async(categoryId) => {
 							<div class="flex flex-col bg-white" :class="{ 'hidden': showItemSearch }">
 								<div class="sm:-mx-6 lg:-mx-8 h-[800px]">
 									<div class="h-[70%] py-0 sm:px-6 lg:px-8 overflow-y-auto">
-										<div class="grid grid-cols-3 gap-4 text-center mt-3 text-white font-bold">
-											<div @click="handleAddItem(item)" class="p-6 hover:cursor-pointer inline-block align-middle" v-for="item in items_list" :key="item" :class="[category_item == '1' ? 'bg-[#468aa2] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#de5d6c] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#e8775b] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#655ae0] hover:bg-[#655ae0d4]' : '']"><p class="text-xl mb-2">{{ item.itemid }}</p> <p class="mb-2 text-sm">Inventario: {{ item.inventario[0]?.inventario }}</p> <p class="text-4xl font-extrabold">${{ item.PriceList[0].price_unitprice }}</p></div>
+										<div class="grid grid-cols-3 gap-4 text-center mt-2 text-white font-bold">
+											<div @click="handleAddItem(item)"
+												class="p-6 hover:cursor-pointer inline-block align-middle"
+												v-for="item in items_list" :key="item"
+												:class="[category_item == '1' ? 'bg-[#468aa2] hover:bg-[#4689a2d2]' : '', category_item == '2' ? 'bg-[#de5d6c] hover:bg-[#de5d6ccb]' : '', category_item == '3' ? 'bg-[#e8775b] hover:bg-[#e8775bc2]' : '', category_item == '4' ? 'bg-[#655ae0] hover:bg-[#655ae0d4]' : '']">
+												<p class="text-4xl mb-1">{{ item.itemid }}</p>
+												<p class="text-4xl mb-1">Inventario: {{ item.inventario[0]?.inventario }}
+												</p>
+												<p class="text-5xl font-extrabold">${{ item.PriceList[0].price_unitprice
+													}}</p>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -2230,7 +2280,8 @@ const handleSelectCategory = async(categoryId) => {
 						</div>
 					</div>
 				</div>
-				<div class="w-full px-2 rounded-lg lg:col-span-3 mt-5 lg:mt-0 infoSale lg:right-9 bg-white pb-2">
+				<div
+					class="w-full px-2 rounded-lg lg:col-span-2 mt-5 lg:mt-0 infoSale lg:right-9 bg-white pb-2 lg:w-[25%]">
 					<!-- <div class="flex rounded-lg mb-2 w-full items-center justify-center">
 						<div class="mr-2 w-full text-center">
 							<label class="uppercase text-xs font-bold mb-2">
@@ -2242,65 +2293,81 @@ const handleSelectCategory = async(categoryId) => {
 						</div>
 					</div> -->
 					<div class="flex flex-wrap p-3 rounded-lg mb-2 shadow-sl overflow-x-auto">
-						<div class="flex justify-center items-center w-full text-center text-lg font-bold bg-[#468aa2] p-4 text-white">
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart4 w-8 h-8 mr-2" viewBox="0 0 16 16">
-								<path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/>
+						<div
+							class="flex justify-center items-center w-full text-center text-lg font-bold bg-[#468aa2] p-4 text-white">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+								class="bi bi-cart4 w-8 h-8 mr-2" viewBox="0 0 16 16">
+								<path
+									d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0" />
 							</svg>
 							<p class="text-2xl">Carrito de compras</p>
 						</div>
-						<table class="min-w-full text-left text-2xl font-light bg-[#468aa2] table-fixed">
-							<thead
-								class="border-b font-medium dark:border-neutral-500 text-center bg-[#468aa2] text-white">
-								<tr>
-									<!-- <th scope="col" class="px-5 py-4">Img</th> -->
-									<th scope="col" class="px-5 py-4"></th>
-									<th scope="col" class="px-5 py-4">Artículo</th>
-									<th scope="col" class="px-5 py-4">Cantidad</th>
-									<th scope="col" class="px-5 py-4">Precio</th>
-									<th scope="col" class="px-5 py-4">Total</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr class="border-b dark:border-neutral-500 text-center bg-[#e8e8e8]"
-								v-for="(shoppingItem, index) in shoppingItems" :key="shoppingItem">
-									<td class="whitespace-nowrap px-2 py-4">
-										<svg @click="handleRemoveItem(index)" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-x-circle-fill hover:cursor-pointer text-[#5c2424] hover:text-[#5c2424cb]" viewBox="0 0 16 16">
-											<path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/>
-										</svg>
-									</td>
-									<td class="whitespace-nowrap px-2 py-4 font-extrabold">{{ shoppingItem.itemid }}</td>
-									<td class="whitespace-nowrap px-2 py-4">
-										<div class="inline-flex">
-											<button @click="handleRemoveQuantityItem(index)" :disabled="shoppingItem.custitem_tipo_articulo == 'promo' || shoppingItem.custitem_tipo_articulo == 'regalo'">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16"
-													height="16" fill="currentColor"
-													class="bi bi-dash-circle-fill h-7 w-7 hover:text-blue-900"
-													viewBox="0 0 16 16">
-													<path
-														d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1z" />
-												</svg>
-											</button>
-											<!-- cantidad -->
-											<div class="font-bold pl-2 pr-2">
-												<input v-on:input="handleChangeNumber(index)" @keypress.enter="handleQuantityItem(index)" class="w-16" type="number" v-model="shoppingItem.shop_quantity_bag">
+						<div class="carrito-scrollable">
+							<table class="min-w-full text-left text-xl font-light bg-[#468aa2] table-fixed">
+								<thead
+									class="border-b font-medium dark:border-neutral-500 text-center bg-[#468aa2] text-white">
+									<tr>
+										<th scope="col" class="px-5 py-4"></th>
+										<th scope="col" class="px-5 py-4">Artículo</th>
+										<th scope="col" class="px-5 py-4">Cantidad</th>
+										<th scope="col" class="px-5 py-4">Precio</th>
+										<th scope="col" class="px-5 py-4">Total</th>
+									</tr>
+								</thead>
+
+								<tbody>
+									<tr class="border-b dark:border-neutral-500 text-center bg-[#e8e8e8]"
+										v-for="(shoppingItem, index) in shoppingItems" :key="shoppingItem">
+										<td class="whitespace-nowrap px-2 py-4">
+											<svg @click="handleRemoveItem(index)" xmlns="http://www.w3.org/2000/svg"
+												width="32" height="32" fill="currentColor"
+												class="bi bi-x-circle-fill hover:cursor-pointer text-[#5c2424] hover:text-[#5c2424cb]"
+												viewBox="0 0 16 16">
+												<path
+													d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+											</svg>
+										</td>
+										<td class="whitespace-nowrap px-2 py-4 font-extrabold">{{ shoppingItem.itemid }}
+										</td>
+										<td class="whitespace-nowrap px-2 py-4">
+											<div class="inline-flex">
+												<button @click="handleRemoveQuantityItem(index)"
+													:disabled="shoppingItem.custitem_tipo_articulo == 'promo' || shoppingItem.custitem_tipo_articulo == 'regalo'">
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+														fill="currentColor"
+														class="bi bi-dash-circle-fill h-7 w-7 hover:text-blue-900"
+														viewBox="0 0 16 16">
+														<path
+															d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1z" />
+													</svg>
+												</button>
+												<!-- cantidad -->
+												<div class="font-bold pl-2 pr-2">
+													<input v-on:input="handleChangeNumber(index)"
+														@keypress.enter="handleQuantityItem(index)" class="w-16"
+														type="number" v-model="shoppingItem.shop_quantity_bag">
+												</div>
+												<button
+													@click="handleAddQuantityItem(index, shoppingItem.shop_quantity_bag)"
+													:disabled="shoppingItem.custitem_tipo_articulo == 'promo' || shoppingItem.custitem_tipo_articulo == 'regalo'">
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+														fill="currentColor"
+														class="bi bi-plus-circle-fill h-7 w-7 hover:text-blue-900"
+														viewBox="0 0 16 16">
+														<path
+															d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z" />
+													</svg>
+												</button>
 											</div>
-											<button @click="handleAddQuantityItem(index, shoppingItem.shop_quantity_bag)" :disabled="shoppingItem.custitem_tipo_articulo == 'promo' || shoppingItem.custitem_tipo_articulo == 'regalo'">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16"
-													height="16" fill="currentColor"
-													class="bi bi-plus-circle-fill h-7 w-7 hover:text-blue-900"
-													viewBox=" 0 0 16
-												16">
-													<path
-														d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z" />
-												</svg>
-											</button>
-										</div>
-									</td>
-									<td class="whitespace-nowrap px-2 py-4">${{ shoppingItem.shop_unit_price }}</td>
-									<td class="whitespace-nowrap px-2 py-4 font-extrabold">${{ shoppingItem.shop_total_price }}</td>
-								</tr>
-							</tbody>
-						</table>
+										</td>
+										<td class="whitespace-nowrap px-2 py-4">${{ shoppingItem.shop_unit_price }}</td>
+										<td class="whitespace-nowrap px-2 py-4 font-extrabold">${{
+											shoppingItem.shop_total_price }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<!-- Fin del contenedor con scroll -->
 					</div>
 					<div class="bg-[#4689a1] text-white p-3 rounded-lg mb-2 flex flex-wrap">
 						<div class="w-full">
@@ -2311,13 +2378,17 @@ const handleSelectCategory = async(categoryId) => {
 								class="bg-black text-white mt-5 w-[35%] h-[80px] md:mt-0 lg:mt-0 font-semibold px-8 text-lg py-2 rounded-xl mb-3"
 								@click="handleShowMethodPayment()">
 								Agregar</button>
-							<div class="mb-5" v-for="(methodPayment, index) in methodsPayments"
-								:key="index">
+							<div class="mb-5" v-for="(methodPayment, index) in methodsPayments" :key="index">
 								<div class="flex flex-wrap" v-if="methodPayment.method == 1">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
 									<span
@@ -2331,10 +2402,15 @@ const handleSelectCategory = async(categoryId) => {
 									<p class="text-xl">${{ Number(methodPayment.amount).toFixed(2) }}</p>
 								</div>
 								<div class="flex flex-wrap" v-if="methodPayment.method == 2">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
 									<span
@@ -2348,13 +2424,19 @@ const handleSelectCategory = async(categoryId) => {
 									<p class="text-xl">${{ Number(methodPayment.amount).toFixed(2) }}</p>
 								</div>
 								<div class="flex flex-wrap" v-if="methodPayment.method == 3">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
-									<span class="flex flex-wrap bg-green-100 text-green-800 text-xl font-medium me-2 px-2.5 py-0.5 rounded e">
+									<span
+										class="flex flex-wrap bg-green-100 text-green-800 text-xl font-medium me-2 px-2.5 py-0.5 rounded e">
 										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
 											fill="currentColor" class="bi bi-cash-coin w-6 h-6 mr-2"
 											viewBox="0 0 16 16">
@@ -2369,10 +2451,15 @@ const handleSelectCategory = async(categoryId) => {
 									<p class="text-xl">${{ Number(methodPayment.amount).toFixed(2) }}</p>
 								</div>
 								<div class="flex flex-wrap" v-if="methodPayment.method == 4">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
 									<span
@@ -2386,10 +2473,15 @@ const handleSelectCategory = async(categoryId) => {
 									<p class="text-xl">${{ Number(methodPayment.amount).toFixed(2) }}</p>
 								</div>
 								<div class="flex flex-wrap" v-if="methodPayment.method == 5">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
 									<span
@@ -2403,10 +2495,15 @@ const handleSelectCategory = async(categoryId) => {
 									<p class="text-xl">${{ Number(methodPayment.amount).toFixed(2) }}</p>
 								</div>
 								<div class="flex flex-wrap" v-if="methodPayment.method == 6">
-									<span class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer" @click="handleCancelmethodPayment(index)">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
-											<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-											<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+									<span
+										class="flex flex-wrap bg-red-100 text-red-900 text-xl font-medium text-center p-1 rounded mr-2 hover:cursor-pointer"
+										@click="handleCancelmethodPayment(index)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-x-circle w-6 h-6" viewBox="0 0 16 16">
+											<path
+												d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+											<path
+												d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
 										</svg>
 									</span>
 									<span
@@ -2421,8 +2518,13 @@ const handleSelectCategory = async(categoryId) => {
 								</div>
 							</div>
 							<hr class="w-full h-1 bg-gray-200 border-0 rounded">
-							<p class="text-2xl font-medium mt-2">Cambio <br> ${{ (formMethodPayment.change).toFixed(2) }}</p>
-							<p class="text-2xl font-bold mt-2">Pagado <br> ${{ (formMethodPayment.totalPaid).toFixed(2) }}</p>
+							<p class="text-3xl font-medium mt-2">Cambio <br> ${{ (formMethodPayment.change).toFixed(2)
+								}}</p>
+							<p class="text-3xl font-bold mt-2">Pagado <br> ${{ (formMethodPayment.totalPaid).toFixed(2)
+								}}</p>
+								<!-- <p class="text-3xl font-bold mt-2">Pendiente de pago <br> ${{ pedingPayment }}</p> -->
+								<!-- <p :class="{'text-red-500': pedingPayment > 0, 'text-white': pedingPayment <= 0}" class="text-3xl font-bold mt-2">Pendiente de pago <br> ${{ pedingPayment }}</p> -->
+								<p class="text-4xl font-bold mt-2">Pendiente de pago <br><span :class="{'text-red-600': pedingPayment > 0}">${{ pedingPayment }}</span></p>
 						</div>
 					</div>
 					<div class="flex flex-wrap p-3 rounded-lg mb-2 shadow-sl">
@@ -2438,7 +2540,8 @@ const handleSelectCategory = async(categoryId) => {
 							<p class="text-2xl text-black font-thin">Impuestos</p>
 							<p class="text-3xl font-semibold mb-2">${{ objSale.taxes }}</p>
 							<p class="text-2xl text-black font-thin">Descuentos</p>
-							<p class="text-3xl font-semibold mb-2" v-for="discounts in objSale.discounts" :key="discounts">
+							<p class="text-3xl font-semibold mb-2" v-for="discounts in objSale.discounts"
+								:key="discounts">
 								{{ discounts.name + " - " + "$" + discounts.discount }}
 							</p>
 							<hr class="w-full h-1 mx-auto bg-gray-100 border-0 rounded my-4">
@@ -2448,13 +2551,13 @@ const handleSelectCategory = async(categoryId) => {
 					</div>
 					<div class="flex">
 						<button
-						class="bg-[#00a0c6] h-[60px] text-white text-4xl w-full mt-5 md:mt-0 lg:mt-0 font-semibold px-8 py-4 rounded-xl float-right ml-5 hover:bg-[#009ec6cf]"
-						@click="handleShowTicket()">
-						Pagar</button>
+							class="bg-[#00a0c6] h-[60px] text-white text-3xl w-full mt-5 md:mt-0 lg:mt-0 font-semibold rounded-xl float-right ml-5 hover:bg-[#009ec6cf]"
+							@click="handleShowTicket()">
+							Pagar</button>
 						<button
-						class="bg-black h-[60px] text-white text-4xl w-full mt-5 md:mt-0 lg:mt-0 font-semibold px-8 py-4 rounded-xl float-right ml-5 hover:bg-[#00a0c6]"
-						@click="handleTest()">
-						Anular</button>
+							class="bg-black h-[60px] text-white text-3xl w-full mt-5 md:mt-0 lg:mt-0 font-semibold rounded-xl float-right ml-5 hover:bg-[#00a0c6]"
+							@click="handleTest()">
+							Anular</button>
 					</div>
 				</div>
 			</div>
@@ -2473,10 +2576,13 @@ const handleSelectCategory = async(categoryId) => {
 
 			<div class="flex flex-col items-center mt-8" id="ticketsale">
 				<div class="w-full md:wfull lg:w-[30%] bg-white shadowCard p-4 items-center text-center">
-					<p class="text-2xl font-bold mb-4 mt-4 text-center"><img :src="posLogo" alt="POS Logo" class="h-24 mx-auto"/></p>
+					<p class="text-2xl font-bold mb-4 mt-4 text-center"><img :src="posLogo" alt="POS Logo"
+							class="h-24 mx-auto" /></p>
 					<p class="text-lg font-bold mt-5">TICKET DE VENTA <br> {{ objSale.id }}</p>
 					<!-- <p class="text-sm">Cotizacion de Origen: <strong class="font-bold">{{ objSale.client.estimates.externalid }}</strong></p> -->
-					<p class="text-sm" v-for="estimate in objSale.client.estimates" :key="estimate">{{ estimate.externalid ? estimate.externalid : estimate.tranid }} - {{ moment(estimate.trandate).utc().format('DD/MMM/YYYY HH:mm:ss') }}></p>
+					<p class="text-sm" v-for="estimate in objSale.client.estimates" :key="estimate">{{
+						estimate.externalid ? estimate.externalid : estimate.tranid }} - {{
+						moment(estimate.trandate).utc().format('DD/MMM/YYYY HH:mm:ss') }}></p>
 					<p class="text-sm">Fecha y Hora: <strong class="font-bold">{{ objSale.trandate }}</strong></p>
 					<hr class="hrDotted mt-5 mb-5">
 					<div class="grid grid-cols-4 mb-2 font-extrabold">
@@ -2487,10 +2593,11 @@ const handleSelectCategory = async(categoryId) => {
 					</div>
 					<div class=" mb-2" v-for="item in objSale.items" :key="item">
 						<div class="grid grid-cols-4">
-							<p class="text-[12px] text-center">{{ item.itemid }} <br> {{ item.displayname }} <br> {{ item.salesdescription }}</p>
-        					<p class="text-[12px] text-center">{{ item.shop_quantity_bag }}</p>
-        					<p class="text-[12px] text-center">${{ Number(item.shop_unit_price).toFixed(2) }}</p>
-        					<p class="text-[12px] text-center">${{ Number(item.shop_total_price).toFixed(2) }}</p>
+							<p class="text-[12px] text-center">{{ item.itemid }} <br> {{ item.displayname }} <br> {{
+								item.salesdescription }}</p>
+							<p class="text-[12px] text-center">{{ item.shop_quantity_bag }}</p>
+							<p class="text-[12px] text-center">${{ Number(item.shop_unit_price).toFixed(2) }}</p>
+							<p class="text-[12px] text-center">${{ Number(item.shop_total_price).toFixed(2) }}</p>
 						</div>
 					</div>
 
@@ -2505,22 +2612,26 @@ const handleSelectCategory = async(categoryId) => {
 					</div>
 				</div>
 			</div>
-			<button class="bg-[#00a0c6] text-white font-extrabold text-lg px-14 py-4 rounded-full mt-5 float-right w-full md:w-auto inline-flex items-center"
+			<button
+				class="bg-[#00a0c6] text-white font-extrabold text-lg px-14 py-4 rounded-full mt-5 float-right w-full md:w-auto inline-flex items-center"
 				@click="handlePrintTicket()">
-				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2 w-6 h-6" viewBox="0 0 16 16">
-					<path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1"/>
-					<path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+					class="bi bi-printer-fill mr-2 w-6 h-6" viewBox="0 0 16 16">
+					<path
+						d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1" />
+					<path
+						d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1" />
 				</svg>
 				Imprimir
 			</button>
 		</div>
 
 		<div class="bg-[#ffffff] w-[100%] p-2 md:p-10 lg:p-10" v-if="loadPromotions">
-			<Loader msg="Validando promociones"/>
+			<Loader msg="Validando promociones" />
 		</div>
 
 		<div class="bg-[#ffffff] w-[100%] p-2 md:p-10 lg:p-10" v-if="loader_sale">
-			<Loader msg="Guardando transacción"/>
+			<Loader msg="Guardando transacción" />
 		</div>
 	</div>
 
@@ -2556,30 +2667,30 @@ const handleSelectCategory = async(categoryId) => {
 										</select>
 									</div>
 									<div class="flex flex-wrap w-full mb-6 mt-5">
-									<div class="w-full mb-6 md:mb-0">
-										<label
-											class="block uppercase w-full tracking-wide text-gray-700 text-xs font-bold mb-2"
-											for="grid-last-name">
-											Ingrese el monto del pago
-										</label>
+										<div class="w-full mb-6 md:mb-0">
+											<label
+												class="block uppercase w-full tracking-wide text-gray-700 text-xs font-bold mb-2"
+												for="grid-last-name">
+												Ingrese el monto del pago
+											</label>
 
-										<div class="relative mb-6">
-											<div
-												class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-													fill="currentColor"
-													class="bi bi-currency-dollar w-4 h-4 text-gray-500"
-													viewBox="0 0 16 16">
-													<path
-														d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z" />
-												</svg>
+											<div class="relative mb-6">
+												<div
+													class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+														fill="currentColor"
+														class="bi bi-currency-dollar w-4 h-4 text-gray-500"
+														viewBox="0 0 16 16">
+														<path
+															d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z" />
+													</svg>
+												</div>
+												<input type="number" id="input-group-1"
+													class="block w-full ps-10 p-2.5 bg-gray-200 text-gray-700 border border-gray-200 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+													placeholder="" v-model="formMethodPayment.amount">
 											</div>
-											<input type="number" id="input-group-1"
-												class="block w-full ps-10 p-2.5 bg-gray-200 text-gray-700 border border-gray-200 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-												placeholder="" v-model="formMethodPayment.amount">
 										</div>
 									</div>
-								</div>
 								</div>
 							</div>
 						</div>
@@ -2598,8 +2709,10 @@ const handleSelectCategory = async(categoryId) => {
 	</div>
 
 	<!-- modal validate promotions -->
-	<div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" v-if="showValidatePromotions">
-		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleModalValidatePromotions()"></div>
+	<div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true"
+		v-if="showValidatePromotions">
+		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity"
+			@click="handleModalValidatePromotions()"></div>
 		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
 			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
 				<div
@@ -2610,9 +2723,13 @@ const handleSelectCategory = async(categoryId) => {
 							<h3 class="text-xl font-semibold text-gray-900">
 								Validación de promociones
 							</h3>
-							<button @click="handleModalValidatePromotions()" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
-								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+							<button @click="handleModalValidatePromotions()" type="button"
+								class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+								data-modal-hide="default-modal">
+								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+									viewBox="0 0 14 14">
+									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+										stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
 								</svg>
 								<span class="sr-only">Close modal</span>
 							</button>
@@ -2621,7 +2738,8 @@ const handleSelectCategory = async(categoryId) => {
 							<div class="mt-3 text-center">
 								<div class="flex flex-col w-full mb-6 mt-5">
 									<div class="w-full mb-6 md:mb-0 text-center">
-										<h1 class="font-bold text-3xl">¿Desea verificar si tiene promociones aplicables?</h1>
+										<h1 class="font-bold text-3xl">¿Desea verificar si tiene promociones aplicables?
+										</h1>
 										<!-- <h2 class="font-semibold text-lg">¿Desea continuar validando las promociones?</h2> -->
 									</div>
 								</div>
@@ -2643,7 +2761,8 @@ const handleSelectCategory = async(categoryId) => {
 
 	<!-- modal search and select estimate -->
 	<div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" v-if="estimateModal">
-		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleModalSelectEstimate()"></div>
+		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleModalSelectEstimate()">
+		</div>
 		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
 			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
 				<div
@@ -2654,9 +2773,13 @@ const handleSelectCategory = async(categoryId) => {
 							<h3 class="text-xl font-semibold text-gray-900">
 								Seleccionar cotización
 							</h3>
-							<button @click="handleModalSelectEstimate()" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
-								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+							<button @click="handleModalSelectEstimate()" type="button"
+								class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+								data-modal-hide="default-modal">
+								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+									viewBox="0 0 14 14">
+									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+										stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
 								</svg>
 								<span class="sr-only">Close modal</span>
 							</button>
@@ -2667,7 +2790,9 @@ const handleSelectCategory = async(categoryId) => {
 									<div class="w-full mb-6 md:mb-0 text-left">
 										<ul class="list-disc">
 											<li class="font-semibold p-2" v-for="estimate in objSale.client.estimates"
-												:key="estimate">{{ estimate.externalid ? estimate.externalid : estimate.tranid }} - {{ moment(estimate.trandate).utc().format('DD/MMM/YYYY HH:mm:ss') }}
+												:key="estimate">{{ estimate.externalid ? estimate.externalid :
+												estimate.tranid }} - {{
+												moment(estimate.trandate).utc().format('DD/MMM/YYYY HH:mm:ss') }}
 												<button @click="handleSelectEstimate(estimate.internalid)"
 													class=" bg-[#fab33c] p-2 rounded-lg hover:bg-[#f8c56d]">Seleccionar</button>
 											</li>
@@ -2700,9 +2825,13 @@ const handleSelectCategory = async(categoryId) => {
 							<h3 class="text-xl font-semibold text-gray-900">
 								Buscar Cliente
 							</h3>
-							<button v-show="!loader_search_client" @click="handleSearchClient()" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
-								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+							<button v-show="!loader_search_client" @click="handleSearchClient()" type="button"
+								class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+								data-modal-hide="default-modal">
+								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+									viewBox="0 0 14 14">
+									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+										stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
 								</svg>
 								<span class="sr-only">Close modal</span>
 							</button>
@@ -2713,30 +2842,34 @@ const handleSelectCategory = async(categoryId) => {
 									<div class="flex w-full items-center">
 										<label for="simple-search" class="sr-only">Buscar</label>
 										<div class="relative w-full">
-											<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+											<div
+												class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
 												<svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
 													xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-													<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-														stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+													<path stroke="currentColor" stroke-linecap="round"
+														stroke-linejoin="round" stroke-width="2"
+														d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
 												</svg>
 											</div>
 											<input type="text" id="simple-search"
 												class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-												placeholder="Ingrese el nombre del cliente..." v-model="inpSearchClient" @keypress.enter="filterClient()" />
+												placeholder="Ingrese el nombre del cliente..." v-model="inpSearchClient"
+												@keypress.enter="filterClient()" />
 										</div>
 										<button @click="filterClient()"
 											class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white bg-[#fab33c] hover:bg-[#fbc05e] focus:ring-4 focus:outline-none focus:ring-[#fab33c]">
-											<svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-												viewBox="0 0 20 20">
-												<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+											<svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+												fill="none" viewBox="0 0 20 20">
+												<path stroke="currentColor" stroke-linecap="round"
+													stroke-linejoin="round" stroke-width="2"
 													d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
 											</svg>
 											<span class="sr-only">Search</span>
 										</button>
 										<button @click="resetFilterClient()"
 											class="p-2.5 ms-2 text-sm font-medium rounded-lg border text-white bg-[#fab33c] hover:bg-[#fbc05e] focus:ring-4 focus:outline-none focus:ring-[#fab33c]">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-												class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+												fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
 												<path fill-rule="evenodd"
 													d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
 												<path
@@ -2748,7 +2881,9 @@ const handleSelectCategory = async(categoryId) => {
 									<div class="w-full mb-6 md:mb-0 text-left">
 										<ul class="list-disc">
 											<li class="font-semibold p-2" v-for="client in objSearchClient"
-												:key="client">{{ client.internalid }} - {{ client.companyname ? client.companyname : client.firstname + ' ' + client.lastname }} - {{ client._drt_custom_rfc }}
+												:key="client">{{ client.internalid }} - {{ client.companyname ?
+												client.companyname : client.firstname + ' ' + client.lastname }} - {{
+												client._drt_custom_rfc }}
 												<button @click="handleSelectClient(client)"
 													class=" bg-[#fab33c] p-2 rounded-lg hover:bg-[#f8c56d]">Seleccionar</button>
 											</li>
@@ -2756,7 +2891,7 @@ const handleSelectCategory = async(categoryId) => {
 									</div>
 								</div>
 								<div class="flex flex-col w-full" v-else>
-									<Loader msg="Filtrando clientes"/>
+									<Loader msg="Filtrando clientes" />
 								</div>
 							</div>
 						</div>
@@ -2773,19 +2908,25 @@ const handleSelectCategory = async(categoryId) => {
 
 	<!-- modal for change level price aprobation -->
 	<div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" v-if="modalLevelProbation">
-		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleLevelPriceAprovatio(-1)"></div>
+		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleLevelPriceAprovatio(-1)">
+		</div>
 		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
 			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-				<div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+				<div
+					class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
 					<div class="bg-white">
 						<!-- Modal header -->
 						<div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
 							<h3 class="text-xl font-semibold text-gray-900">
 								Solicitar aprobación del supervisor
 							</h3>
-							<button @click="handleLevelPriceAprovatio(-1)" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
-								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+							<button @click="handleLevelPriceAprovatio(-1)" type="button"
+								class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+								data-modal-hide="default-modal">
+								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+									viewBox="0 0 14 14">
+									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+										stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
 								</svg>
 								<span class="sr-only">Close modal</span>
 							</button>
@@ -2799,12 +2940,14 @@ const handleSelectCategory = async(categoryId) => {
 											<p>Nombre de usuario del supervisor</p>
 											<input type="text" id="simple-search"
 												class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-												placeholder="Michael Odonell" v-model="formSupervisor.user" @keypress.enter="handleAprovedlevelPrice()" />
+												placeholder="Michael Odonell" v-model="formSupervisor.user"
+												@keypress.enter="handleAprovedlevelPrice()" />
 
-											<p>Contraseña del supervisor</p>	
+											<p>Contraseña del supervisor</p>
 											<input type="password" id="simple-search"
 												class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-												v-model="formSupervisor.password" @keypress.enter="handleAprovedlevelPrice()" />
+												v-model="formSupervisor.password"
+												@keypress.enter="handleAprovedlevelPrice()" />
 										</div>
 									</div>
 								</div>
@@ -2825,20 +2968,27 @@ const handleSelectCategory = async(categoryId) => {
 	</div>
 
 	<!-- modal show components -->
-	<div class="relative w-full z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" v-if="modalshowComponents">
-		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity" @click="handleShowComponentsArticleKit()"></div>
+	<div class="relative w-full z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true"
+		v-if="modalshowComponents">
+		<div class="fixed inset-0 bg-[#26245C] bg-opacity-75 transition-opacity"
+			@click="handleShowComponentsArticleKit()"></div>
 		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
 			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-				<div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+				<div
+					class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
 					<div class="bg-white">
 						<!-- Modal header -->
 						<div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
 							<h3 class="text-xl font-semibold text-gray-900">
 								Componentes <strong>{{ infoArticleKit.displayname }}</strong>
 							</h3>
-							<button @click="handleShowComponentsArticleKit()" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
-								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+							<button @click="handleShowComponentsArticleKit()" type="button"
+								class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+								data-modal-hide="default-modal">
+								<svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+									viewBox="0 0 14 14">
+									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+										stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
 								</svg>
 								<span class="sr-only">Close modal</span>
 							</button>
@@ -2860,9 +3010,12 @@ const handleSelectCategory = async(categoryId) => {
 											<tbody>
 												<tr class="border-b dark:border-neutral-500 text-center bg-[#e8e8e8]"
 													v-for="item in infoArticleKit.components" :key="item">
-													<td class="whitespace-nowrap px-2 py-4">{{ item.article.displayname }}</td>
-													<td class="whitespace-nowrap px-2 py-4">{{ item.article.upccode }}</td>
-													<td class="whitespace-nowrap px-2 py-4">{{ item.article.salesdescription }}</td>
+													<td class="whitespace-nowrap px-2 py-4">{{ item.article.displayname
+														}}</td>
+													<td class="whitespace-nowrap px-2 py-4">{{ item.article.upccode }}
+													</td>
+													<td class="whitespace-nowrap px-2 py-4">{{
+														item.article.salesdescription }}</td>
 												</tr>
 											</tbody>
 										</table>
@@ -2883,6 +3036,18 @@ const handleSelectCategory = async(categoryId) => {
 </template>
 
 <style scoped>
+
+.carrito-scrollable {
+  max-height: 300px; /* Ajusta esta altura según necesites que mida la caja */
+  overflow-y: auto;
+  /* border: 1px solid #ccc; Opcional: para visualizar mejor el área del scroll */
+}
+
+.carrito-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
 .shadow-inp {
 	box-shadow: rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
 }
@@ -2893,7 +3058,6 @@ const handleSelectCategory = async(categoryId) => {
 
 .infoSale {
 	zoom: 100%;
-
 	@media (min-width: 411px) {
 		zoom: 100%;
 	}
